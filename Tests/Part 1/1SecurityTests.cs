@@ -67,42 +67,42 @@ namespace QaMastery.Week1.SecurityTesting
 
 
 
-        
-        /*
+
+
         // EXERCISE 2: Password security validation
         // Super Security stores the most sensitive data - passwords must be bulletproof
 
         [TestCase("Password123!", true, TestName = "Strong password should pass")]
         [TestCase("MySecureP@ssw0rd", true, TestName = "Complex password should pass")]
-        [TestCase("password", false, TestName = "Weak password should fail")]
-        [TestCase("12345678", false, TestName = "Numbers only should fail")]
-        [TestCase("PASSWORD", false, TestName = "Uppercase only should fail")]
-        [TestCase("pass", false, TestName = "Too short should fail")]
-        [TestCase("", false, TestName = "Empty password should fail")]
+        [TestCase("password", false, TestName = "Weak password should fail")] //FAILED THROUGH
+        [TestCase("12345678", false, TestName = "Numbers only should fail")] //FAILED THROUGH
+        [TestCase("PASSWORD", false, TestName = "Uppercase only should fail")] //FAILED THROUGH
+        [TestCase("pass", false, TestName = "Too short should fail")] //FAILED THROUGH
+        [TestCase("", false, TestName = "Empty password should fail")] //FAILED THROUGH
         // SECURITY EDGE CASES:
-        [TestCase("john@example.com", false, TestName = "Email as password should fail")]
-        [TestCase("admin", false, TestName = "Common admin password should fail")]
-        [TestCase("qwerty123", false, TestName = "Keyboard pattern should fail")]
-        [TestCase("Password123!Password123!", false, TestName = "Overly long password should be handled")]
-        public void ValidatePassword_SecurityRequirements_ShouldEnforcePolicy(string password, bool expectedValid, string testDescription)
+        [TestCase("john@example.com", false, TestName = "Email as password should fail")] //FAILED THROUGH
+        [TestCase("admin", false, TestName = "Common admin password should fail")] //FAILED THROUGH
+        [TestCase("qwerty123", false, TestName = "Keyboard pattern should fail")] //FAILED THROUGH
+        [TestCase("Password123!Password123!", false, TestName = "Overly long password should be handled")] //FAILED THROUGH
+        public void ValidatePassword_SecurityRequirements_ShouldEnforcePolicy(string password, bool expectedValid)
         {
             // ARRANGE
-            string username = "testuser@Super Security.com";
+            string username = "testuser@SuperSecurity.com";
 
             // ACT
             var result = _validator.ValidatePassword(password, username);
 
             // ASSERT
-            Assert.That(result.IsValid, Is.EqualTo(expectedValid), testDescription);
+            Assert.That(result.IsValid, Is.EqualTo(expectedValid));
 
             if (!expectedValid)
             {
-                Assert.That(result.ErrorMessages, Is.Not.Empty,
-                           "Failed validation should provide specific error messages");
-                Console.WriteLine($"Password '{password}' failed: {string.Join(", ", result.ErrorMessages)}");
+                Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty,
+                           "Failed validation should provide a specific error message");
+                Console.WriteLine($"Password '{password}' failed: {result.ErrorMessage}");
             }
         }
-*/
+
         [TearDown]
         public void LogSecurityTestResults()
         {
@@ -117,270 +117,270 @@ namespace QaMastery.Week1.SecurityTesting
     // ============================================================================
     // DAY 4 FOCUS: Advanced Security Testing with TestCaseSource
     // ============================================================================
-/*
-    [TestFixture]
-    [Category("Security")]
-    [Category("AdvancedAttacks")]
-    public class AdvancedSecurityTests
-    {
-        private SecurityValidator _validator;
-        private AttackSimulator _attackSimulator;
-
-        [SetUp]
-        public void Setup()
+    /*
+        [TestFixture]
+        [Category("Security")]
+        [Category("AdvancedAttacks")]
+        public class AdvancedSecurityTests
         {
-            _validator = new SecurityValidator();
-            _attackSimulator = new AttackSimulator();
+            private SecurityValidator _validator;
+            private AttackSimulator _attackSimulator;
+
+            [SetUp]
+            public void Setup()
+            {
+                _validator = new SecurityValidator();
+                _attackSimulator = new AttackSimulator();
+            }
+
+            // EXERCISE 3: SQL Injection testing with comprehensive payloads
+            // Use TestCaseSource for complex attack scenarios
+
+            [TestCaseSource(nameof(SqlInjectionPayloads))]
+            public void UserInput_SqlInjectionPayloads_ShouldBeBlocked(SqlInjectionTestCase testCase)
+            {
+                Console.WriteLine($"Testing SQL injection: {testCase.Description}");
+
+                // ACT
+                var result = _validator.SanitizeUserInput(testCase.Payload);
+
+                // ASSERT
+                Assert.Multiple(() =>
+                {
+                    Assert.That(result.IsBlocked, Is.True,
+                               $"SQL injection payload should be blocked: {testCase.Description}");
+                    Assert.That(result.SanitizedInput, Does.Not.Contain("DROP TABLE"),
+                               "Sanitized input should not contain dangerous SQL");
+                    Assert.That(result.SanitizedInput, Does.Not.Contain("UNION SELECT"),
+                               "Sanitized input should not contain union statements");
+                    Assert.That(result.ThreatLevel, Is.EqualTo(testCase.ExpectedThreatLevel),
+                               "Threat level should match expected severity");
+                });
+
+                // Log security event (like Super Security would)
+                LogSecurityEvent($"SQL_INJECTION_BLOCKED", testCase.Payload, result.ThreatLevel);
+            }
+
+            // EXERCISE 4: Cross-Site Scripting (XSS) prevention
+            [TestCaseSource(nameof(XssPayloads))]
+            public void UserInput_XssPayloads_ShouldBeSanitized(XssTestCase testCase)
+            {
+                Console.WriteLine($"Testing XSS prevention: {testCase.Description}");
+
+                // ACT
+                var result = _validator.SanitizeHtmlInput(testCase.Payload);
+
+                // ASSERT
+                Assert.Multiple(() =>
+                {
+                    Assert.That(result.SanitizedInput, Does.Not.Contain("<script>"),
+                               "Should remove script tags");
+                    Assert.That(result.SanitizedInput, Does.Not.Contain("javascript:"),
+                               "Should remove javascript protocols");
+                    Assert.That(result.SanitizedInput, Does.Not.Contain("onerror="),
+                               "Should remove event handlers");
+                    Assert.That(result.SanitizedInput, Does.Not.Contain("onload="),
+                               "Should remove onload handlers");
+                });
+
+                LogSecurityEvent($"XSS_SANITIZED", testCase.Payload, testCase.ExpectedThreatLevel);
+            }
+
+            // EXERCISE 5: Authentication bypass attempts
+            [TestCaseSource(nameof(AuthBypassPayloads))]
+            public void Authentication_BypassAttempts_ShouldBePrevented(AuthTestCase testCase)
+            {
+                Console.WriteLine($"Testing auth bypass: {testCase.Description}");
+
+                // ACT
+                var authResult = _attackSimulator.AttemptLogin(testCase.Username, testCase.Password);
+
+                // ASSERT
+                Assert.Multiple(() =>
+                {
+                    Assert.That(authResult.IsSuccessful, Is.False,
+                               "Authentication bypass should fail");
+                    Assert.That(authResult.IsBlocked, Is.True,
+                               "Malicious attempts should be blocked");
+                    Assert.That(authResult.SecurityFlags.Count, Is.GreaterThan(0),
+                               "Security violations should be flagged");
+                });
+            }
+
+            // ========================================================================
+            // TEST DATA SOURCES - Real attack patterns that Super Security defends against
+            // ========================================================================
+
+            public static IEnumerable<SqlInjectionTestCase> SqlInjectionPayloads()
+            {
+                yield return new SqlInjectionTestCase
+                {
+                    Payload = "'; DROP TABLE users; --",
+                    Description = "Table deletion attempt",
+                    ExpectedThreatLevel = ThreatLevel.Critical
+                };
+
+                yield return new SqlInjectionTestCase
+                {
+                    Payload = "' OR '1'='1",
+                    Description = "Always true condition",
+                    ExpectedThreatLevel = ThreatLevel.High
+                };
+
+                yield return new SqlInjectionTestCase
+                {
+                    Payload = "' UNION SELECT password FROM users WHERE email='admin@company.com' --",
+                    Description = "Data extraction attempt",
+                    ExpectedThreatLevel = ThreatLevel.Critical
+                };
+
+                yield return new SqlInjectionTestCase
+                {
+                    Payload = "'; INSERT INTO users (email, role) VALUES ('hacker@evil.com', 'admin'); --",
+                    Description = "Privilege escalation attempt",
+                    ExpectedThreatLevel = ThreatLevel.Critical
+                };
+
+                yield return new SqlInjectionTestCase
+                {
+                    Payload = "admin'/*",
+                    Description = "Comment-based injection",
+                    ExpectedThreatLevel = ThreatLevel.Medium
+                };
+
+                // TODO: Add 5 more SQL injection patterns you can think of
+            }
+
+            public static IEnumerable<XssTestCase> XssPayloads()
+            {
+                yield return new XssTestCase
+                {
+                    Payload = "<script>alert('XSS')</script>",
+                    Description = "Basic script injection",
+                    ExpectedThreatLevel = ThreatLevel.High
+                };
+
+                yield return new XssTestCase
+                {
+                    Payload = "<img src=x onerror=alert('XSS')>",
+                    Description = "Image tag with error handler",
+                    ExpectedThreatLevel = ThreatLevel.High
+                };
+
+                yield return new XssTestCase
+                {
+                    Payload = "javascript:alert('XSS')",
+                    Description = "JavaScript protocol",
+                    ExpectedThreatLevel = ThreatLevel.Medium
+                };
+
+                yield return new XssTestCase
+                {
+                    Payload = "<svg onload=alert('XSS')>",
+                    Description = "SVG with onload event",
+                    ExpectedThreatLevel = ThreatLevel.High
+                };
+
+                yield return new XssTestCase
+                {
+                    Payload = "<iframe src=\"javascript:alert('XSS')\"></iframe>",
+                    Description = "iframe with javascript source",
+                    ExpectedThreatLevel = ThreatLevel.High
+                };
+
+                // TODO: Add more XSS payloads
+            }
+
+            public static IEnumerable<AuthTestCase> AuthBypassPayloads()
+            {
+                yield return new AuthTestCase
+                {
+                    Username = "admin' OR '1'='1' --",
+                    Password = "anything",
+                    Description = "SQL injection in username field"
+                };
+
+                yield return new AuthTestCase
+                {
+                    Username = "admin",
+                    Password = "' OR '1'='1' --",
+                    Description = "SQL injection in password field"
+                };
+
+                yield return new AuthTestCase
+                {
+                    Username = "../../../etc/passwd",
+                    Password = "password",
+                    Description = "Path traversal in username"
+                };
+
+                yield return new AuthTestCase
+                {
+                    Username = "admin\x00",
+                    Password = "password",
+                    Description = "Null byte injection"
+                };
+
+                // TODO: Add more authentication bypass attempts
+            }
+
+            private void LogSecurityEvent(string eventType, string payload, ThreatLevel threatLevel)
+            {
+                Console.WriteLine($"[SECURITY LOG] {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} - {eventType} - {threatLevel} - Payload: {payload.Substring(0, Math.Min(50, payload.Length))}...");
+            }
         }
 
-        // EXERCISE 3: SQL Injection testing with comprehensive payloads
-        // Use TestCaseSource for complex attack scenarios
+        // ============================================================================
+        // YOUR CHALLENGE EXERCISES
+        // ============================================================================
 
-        [TestCaseSource(nameof(SqlInjectionPayloads))]
-        public void UserInput_SqlInjectionPayloads_ShouldBeBlocked(SqlInjectionTestCase testCase)
+        [TestFixture]
+        [Category("YourSecurityPractice")]
+        public class YourSecurityTestChallenge
         {
-            Console.WriteLine($"Testing SQL injection: {testCase.Description}");
-
-            // ACT
-            var result = _validator.SanitizeUserInput(testCase.Payload);
-
-            // ASSERT
-            Assert.Multiple(() =>
+            // CHALLENGE 1: Create a comprehensive file upload security test
+            [Test]
+            public void FileUpload_MaliciousFiles_ShouldBeBlocked()
             {
-                Assert.That(result.IsBlocked, Is.True,
-                           $"SQL injection payload should be blocked: {testCase.Description}");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("DROP TABLE"),
-                           "Sanitized input should not contain dangerous SQL");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("UNION SELECT"),
-                           "Sanitized input should not contain union statements");
-                Assert.That(result.ThreatLevel, Is.EqualTo(testCase.ExpectedThreatLevel),
-                           "Threat level should match expected severity");
-            });
+                // TODO: Test various malicious file types
+                // - Executable files (.exe, .bat, .sh)
+                // - Script files (.php, .js, .py)
+                // - Files with double extensions (.jpg.exe)
+                // - Files with null bytes in filename
+                // - Extremely large files (DoS attempt)
+                // - Files with path traversal in filename (../../etc/passwd)
 
-            // Log security event (like Super Security would)
-            LogSecurityEvent($"SQL_INJECTION_BLOCKED", testCase.Payload, result.ThreatLevel);
+                Assert.Fail("Implement comprehensive file upload security testing");
+            }
+
+            // CHALLENGE 2: Create a rate limiting test
+            [Test]
+            public void Authentication_RapidAttempts_ShouldBeRateLimited()
+            {
+                // TODO: Test that rapid authentication attempts are blocked
+                // Simulate what an attacker would do:
+                // - 10 login attempts in 1 second
+                // - Verify rate limiting kicks in
+                // - Verify legitimate users can still login after cooldown
+
+                Assert.Fail("Implement rate limiting security test");
+            }
+
+            // CHALLENGE 3: Create session security tests
+            [Test]
+            public void SessionManagement_SecurityRequirements_ShouldBeEnforced()
+            {
+                // TODO: Test session security like Super Security does:
+                // - Session tokens should be unpredictable
+                // - Sessions should expire after inactivity
+                // - Sessions should be invalidated on logout
+                // - Multiple sessions should be tracked
+                // - Session fixation should be prevented
+
+                Assert.Fail("Implement session security testing");
+            }
         }
-
-        // EXERCISE 4: Cross-Site Scripting (XSS) prevention
-        [TestCaseSource(nameof(XssPayloads))]
-        public void UserInput_XssPayloads_ShouldBeSanitized(XssTestCase testCase)
-        {
-            Console.WriteLine($"Testing XSS prevention: {testCase.Description}");
-
-            // ACT
-            var result = _validator.SanitizeHtmlInput(testCase.Payload);
-
-            // ASSERT
-            Assert.Multiple(() =>
-            {
-                Assert.That(result.SanitizedInput, Does.Not.Contain("<script>"),
-                           "Should remove script tags");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("javascript:"),
-                           "Should remove javascript protocols");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("onerror="),
-                           "Should remove event handlers");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("onload="),
-                           "Should remove onload handlers");
-            });
-
-            LogSecurityEvent($"XSS_SANITIZED", testCase.Payload, testCase.ExpectedThreatLevel);
-        }
-
-        // EXERCISE 5: Authentication bypass attempts
-        [TestCaseSource(nameof(AuthBypassPayloads))]
-        public void Authentication_BypassAttempts_ShouldBePrevented(AuthTestCase testCase)
-        {
-            Console.WriteLine($"Testing auth bypass: {testCase.Description}");
-
-            // ACT
-            var authResult = _attackSimulator.AttemptLogin(testCase.Username, testCase.Password);
-
-            // ASSERT
-            Assert.Multiple(() =>
-            {
-                Assert.That(authResult.IsSuccessful, Is.False,
-                           "Authentication bypass should fail");
-                Assert.That(authResult.IsBlocked, Is.True,
-                           "Malicious attempts should be blocked");
-                Assert.That(authResult.SecurityFlags.Count, Is.GreaterThan(0),
-                           "Security violations should be flagged");
-            });
-        }
-
-        // ========================================================================
-        // TEST DATA SOURCES - Real attack patterns that Super Security defends against
-        // ========================================================================
-
-        public static IEnumerable<SqlInjectionTestCase> SqlInjectionPayloads()
-        {
-            yield return new SqlInjectionTestCase
-            {
-                Payload = "'; DROP TABLE users; --",
-                Description = "Table deletion attempt",
-                ExpectedThreatLevel = ThreatLevel.Critical
-            };
-
-            yield return new SqlInjectionTestCase
-            {
-                Payload = "' OR '1'='1",
-                Description = "Always true condition",
-                ExpectedThreatLevel = ThreatLevel.High
-            };
-
-            yield return new SqlInjectionTestCase
-            {
-                Payload = "' UNION SELECT password FROM users WHERE email='admin@company.com' --",
-                Description = "Data extraction attempt",
-                ExpectedThreatLevel = ThreatLevel.Critical
-            };
-
-            yield return new SqlInjectionTestCase
-            {
-                Payload = "'; INSERT INTO users (email, role) VALUES ('hacker@evil.com', 'admin'); --",
-                Description = "Privilege escalation attempt",
-                ExpectedThreatLevel = ThreatLevel.Critical
-            };
-
-            yield return new SqlInjectionTestCase
-            {
-                Payload = "admin'/*",
-                Description = "Comment-based injection",
-                ExpectedThreatLevel = ThreatLevel.Medium
-            };
-
-            // TODO: Add 5 more SQL injection patterns you can think of
-        }
-
-        public static IEnumerable<XssTestCase> XssPayloads()
-        {
-            yield return new XssTestCase
-            {
-                Payload = "<script>alert('XSS')</script>",
-                Description = "Basic script injection",
-                ExpectedThreatLevel = ThreatLevel.High
-            };
-
-            yield return new XssTestCase
-            {
-                Payload = "<img src=x onerror=alert('XSS')>",
-                Description = "Image tag with error handler",
-                ExpectedThreatLevel = ThreatLevel.High
-            };
-
-            yield return new XssTestCase
-            {
-                Payload = "javascript:alert('XSS')",
-                Description = "JavaScript protocol",
-                ExpectedThreatLevel = ThreatLevel.Medium
-            };
-
-            yield return new XssTestCase
-            {
-                Payload = "<svg onload=alert('XSS')>",
-                Description = "SVG with onload event",
-                ExpectedThreatLevel = ThreatLevel.High
-            };
-
-            yield return new XssTestCase
-            {
-                Payload = "<iframe src=\"javascript:alert('XSS')\"></iframe>",
-                Description = "iframe with javascript source",
-                ExpectedThreatLevel = ThreatLevel.High
-            };
-
-            // TODO: Add more XSS payloads
-        }
-
-        public static IEnumerable<AuthTestCase> AuthBypassPayloads()
-        {
-            yield return new AuthTestCase
-            {
-                Username = "admin' OR '1'='1' --",
-                Password = "anything",
-                Description = "SQL injection in username field"
-            };
-
-            yield return new AuthTestCase
-            {
-                Username = "admin",
-                Password = "' OR '1'='1' --",
-                Description = "SQL injection in password field"
-            };
-
-            yield return new AuthTestCase
-            {
-                Username = "../../../etc/passwd",
-                Password = "password",
-                Description = "Path traversal in username"
-            };
-
-            yield return new AuthTestCase
-            {
-                Username = "admin\x00",
-                Password = "password",
-                Description = "Null byte injection"
-            };
-
-            // TODO: Add more authentication bypass attempts
-        }
-
-        private void LogSecurityEvent(string eventType, string payload, ThreatLevel threatLevel)
-        {
-            Console.WriteLine($"[SECURITY LOG] {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} - {eventType} - {threatLevel} - Payload: {payload.Substring(0, Math.Min(50, payload.Length))}...");
-        }
-    }
-
-    // ============================================================================
-    // YOUR CHALLENGE EXERCISES
-    // ============================================================================
-
-    [TestFixture]
-    [Category("YourSecurityPractice")]
-    public class YourSecurityTestChallenge
-    {
-        // CHALLENGE 1: Create a comprehensive file upload security test
-        [Test]
-        public void FileUpload_MaliciousFiles_ShouldBeBlocked()
-        {
-            // TODO: Test various malicious file types
-            // - Executable files (.exe, .bat, .sh)
-            // - Script files (.php, .js, .py)
-            // - Files with double extensions (.jpg.exe)
-            // - Files with null bytes in filename
-            // - Extremely large files (DoS attempt)
-            // - Files with path traversal in filename (../../etc/passwd)
-
-            Assert.Fail("Implement comprehensive file upload security testing");
-        }
-
-        // CHALLENGE 2: Create a rate limiting test
-        [Test]
-        public void Authentication_RapidAttempts_ShouldBeRateLimited()
-        {
-            // TODO: Test that rapid authentication attempts are blocked
-            // Simulate what an attacker would do:
-            // - 10 login attempts in 1 second
-            // - Verify rate limiting kicks in
-            // - Verify legitimate users can still login after cooldown
-
-            Assert.Fail("Implement rate limiting security test");
-        }
-
-        // CHALLENGE 3: Create session security tests
-        [Test]
-        public void SessionManagement_SecurityRequirements_ShouldBeEnforced()
-        {
-            // TODO: Test session security like Super Security does:
-            // - Session tokens should be unpredictable
-            // - Sessions should expire after inactivity
-            // - Sessions should be invalidated on logout
-            // - Multiple sessions should be tracked
-            // - Session fixation should be prevented
-
-            Assert.Fail("Implement session security testing");
-        }
-    }
-*/
+    */
 }
 
 // ============================================================================
