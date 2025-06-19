@@ -1,6 +1,6 @@
 # Quick QA Log - NUnit Advanced Learning
-**Date:** June 18, 2025  
-**Duration:** [X] hours  
+**Date:** June 18-19, 2025  
+**Duration:** 2-3 hours  
 **Focus:** Dive deep into Advanced Test Organization in NUnit
 
 ---
