@@ -1,6 +1,6 @@
 using System;
 
-namespace QaMastery.Week1.Day1
+namespace QaMastery.Models
 {
     public class User
     {

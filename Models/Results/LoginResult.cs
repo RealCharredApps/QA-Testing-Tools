@@ -1,7 +1,6 @@
 using System;
 
-namespace QaMastery.Week1.Day1
-{
+namespace QaMastery.Models.Results{
     public class LoginResult
     {
         public bool IsSuccess { get; set; }

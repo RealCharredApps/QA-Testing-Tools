@@ -1,6 +1,7 @@
 using System;
+using QaMastery.Models.Results;
 
-namespace QaMastery.Week1.Day1
+namespace QaMastery.Services.Security
 {
     public class AuthService
     {

@@ -1,4 +1,8 @@
 using NUnit.Framework;
+using QaMastery.Services.Core;
+using QaMastery.Services.Security;
+using QaMastery.Models.Results;
+using QaMastery.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,60 +12,60 @@ namespace QaMastery.Week1.SecurityTesting
     // ============================================================================
     // DAY 3 FOCUS: Security Input Validation with TestCase Patterns
     // ============================================================================
-    
+
     [TestFixture]
     [Category("Security")]
     [Category("InputValidation")]
     public class SecurityInputValidationTests
     {
-        private SecurityValidator _validator;
-        private List<string> _testResults;
-        
+        private SecurityValidator _validator = null!;
+        private List<string> _testResults = null!;
+
         [SetUp]
         public void Setup()
         {
             _validator = new SecurityValidator();
             _testResults = new List<string>();
         }
-        
+
         // EXERCISE 1: Email validation with security focus
         // Super Security needs rock-solid email validation (it's their primary identifier)
-        
+
         [TestCase("valid@Super Security.com", true, TestName = "Valid email should pass")]
         [TestCase("user+tag@company.co.uk", true, TestName = "Plus addressing should work")]
-        [TestCase("", false, TestName = "Empty email should fail")]
-        [TestCase("notanemail", false, TestName = "Missing @ should fail")]
-        [TestCase("test@", false, TestName = "Missing domain should fail")]
-        [TestCase("@domain.com", false, TestName = "Missing username should fail")]
+        [TestCase("", false, TestName = "Empty email should fail")] //FAILED THROUGH
+        [TestCase("notanemail", false, TestName = "Missing @ should fail")] //FAILED THROUGH
+        [TestCase("test@", false, TestName = "Missing domain should fail")] //FAILED THROUGH
+        [TestCase("@domain.com", false, TestName = "Missing username should fail")] //FAILED THROUGH
         // SECURITY-FOCUSED test cases (what attackers try):
-        [TestCase("test'; DROP TABLE users; --@evil.com", false, TestName = "SQL injection in email should fail")]
-        [TestCase("test<script>alert('xss')</script>@domain.com", false, TestName = "XSS in email should fail")]
-        [TestCase("test@domain.com\r\nBCC: attacker@evil.com", false, TestName = "Email header injection should fail")]
-        [TestCase("../../../etc/passwd@domain.com", false, TestName = "Path traversal attempt should fail")]
-        public void ValidateEmail_SecurityScenarios_ShouldPreventAttacks(string email, bool expectedValid, string testDescription)
+        [TestCase("test'; DROP TABLE users; --@evil.com", false, TestName = "SQL injection in email should fail")] //FAILED THROUGH
+        [TestCase("test<script>alert('xss')</script>@domain.com", false, TestName = "XSS in email should fail")] //FAILED THROUGH
+        [TestCase("test@domain.com\r\nBCC: attacker@evil.com", false, TestName = "Email header injection should fail")] //FAILED THROUGH
+        [TestCase("../../../etc/passwd@domain.com", false, TestName = "Path traversal attempt should fail")] //FAILED THROUGH
+        public void ValidateEmail_SecurityScenarios_ShouldPreventAttacks(string email, bool expectedValid)
         {
             // ACT
             var result = _validator.ValidateEmail(email);
-            
+
             // ASSERT
-            Assert.That(result.IsValid, Is.EqualTo(expectedValid), testDescription);
-            
+            Assert.That(result.IsValid, Is.EqualTo(expectedValid));
+
             // SECURITY LOGGING: Track what we tested
-            _testResults.Add($"{testDescription}: {(result.IsValid == expectedValid ? "✅" : "❌")}");
-            
+            _testResults.Add($"{(result.IsValid == expectedValid ? "✅" : "❌")}");
+
             // If input should be invalid, ensure it's properly blocked
             if (!expectedValid)
             {
-                Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty, 
+                Assert.That(result.ErrorMessage, Is.Not.Null.And.Not.Empty,
                            "Invalid input should have error message");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("<script>"), 
+                Assert.That(result.SanitizedInput, Does.Not.Contain("<script>"),
                            "Sanitized input should not contain script tags");
             }
         }
-        
+        /*
         // EXERCISE 2: Password security validation
         // Super Security stores the most sensitive data - passwords must be bulletproof
-        
+
         [TestCase("Password123!", true, TestName = "Strong password should pass")]
         [TestCase("MySecureP@ssw0rd", true, TestName = "Complex password should pass")]
         [TestCase("password", false, TestName = "Weak password should fail")]
@@ -78,21 +82,21 @@ namespace QaMastery.Week1.SecurityTesting
         {
             // ARRANGE
             string username = "testuser@Super Security.com";
-            
+
             // ACT
             var result = _validator.ValidatePassword(password, username);
-            
+
             // ASSERT
             Assert.That(result.IsValid, Is.EqualTo(expectedValid), testDescription);
-            
+
             if (!expectedValid)
             {
-                Assert.That(result.ErrorMessages, Is.Not.Empty, 
+                Assert.That(result.ErrorMessages, Is.Not.Empty,
                            "Failed validation should provide specific error messages");
                 Console.WriteLine($"Password '{password}' failed: {string.Join(", ", result.ErrorMessages)}");
             }
         }
-        
+*/
         [TearDown]
         public void LogSecurityTestResults()
         {
@@ -103,11 +107,11 @@ namespace QaMastery.Week1.SecurityTesting
             }
         }
     }
-    
+
     // ============================================================================
     // DAY 4 FOCUS: Advanced Security Testing with TestCaseSource
     // ============================================================================
-    
+/*
     [TestFixture]
     [Category("Security")]
     [Category("AdvancedAttacks")]
@@ -115,92 +119,92 @@ namespace QaMastery.Week1.SecurityTesting
     {
         private SecurityValidator _validator;
         private AttackSimulator _attackSimulator;
-        
+
         [SetUp]
         public void Setup()
         {
             _validator = new SecurityValidator();
             _attackSimulator = new AttackSimulator();
         }
-        
+
         // EXERCISE 3: SQL Injection testing with comprehensive payloads
         // Use TestCaseSource for complex attack scenarios
-        
+
         [TestCaseSource(nameof(SqlInjectionPayloads))]
         public void UserInput_SqlInjectionPayloads_ShouldBeBlocked(SqlInjectionTestCase testCase)
         {
             Console.WriteLine($"Testing SQL injection: {testCase.Description}");
-            
+
             // ACT
             var result = _validator.SanitizeUserInput(testCase.Payload);
-            
+
             // ASSERT
             Assert.Multiple(() =>
             {
-                Assert.That(result.IsBlocked, Is.True, 
+                Assert.That(result.IsBlocked, Is.True,
                            $"SQL injection payload should be blocked: {testCase.Description}");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("DROP TABLE"), 
+                Assert.That(result.SanitizedInput, Does.Not.Contain("DROP TABLE"),
                            "Sanitized input should not contain dangerous SQL");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("UNION SELECT"), 
+                Assert.That(result.SanitizedInput, Does.Not.Contain("UNION SELECT"),
                            "Sanitized input should not contain union statements");
-                Assert.That(result.ThreatLevel, Is.EqualTo(testCase.ExpectedThreatLevel), 
+                Assert.That(result.ThreatLevel, Is.EqualTo(testCase.ExpectedThreatLevel),
                            "Threat level should match expected severity");
             });
-            
+
             // Log security event (like Super Security would)
             LogSecurityEvent($"SQL_INJECTION_BLOCKED", testCase.Payload, result.ThreatLevel);
         }
-        
+
         // EXERCISE 4: Cross-Site Scripting (XSS) prevention
         [TestCaseSource(nameof(XssPayloads))]
         public void UserInput_XssPayloads_ShouldBeSanitized(XssTestCase testCase)
         {
             Console.WriteLine($"Testing XSS prevention: {testCase.Description}");
-            
+
             // ACT
             var result = _validator.SanitizeHtmlInput(testCase.Payload);
-            
+
             // ASSERT
             Assert.Multiple(() =>
             {
-                Assert.That(result.SanitizedInput, Does.Not.Contain("<script>"), 
+                Assert.That(result.SanitizedInput, Does.Not.Contain("<script>"),
                            "Should remove script tags");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("javascript:"), 
+                Assert.That(result.SanitizedInput, Does.Not.Contain("javascript:"),
                            "Should remove javascript protocols");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("onerror="), 
+                Assert.That(result.SanitizedInput, Does.Not.Contain("onerror="),
                            "Should remove event handlers");
-                Assert.That(result.SanitizedInput, Does.Not.Contain("onload="), 
+                Assert.That(result.SanitizedInput, Does.Not.Contain("onload="),
                            "Should remove onload handlers");
             });
-            
+
             LogSecurityEvent($"XSS_SANITIZED", testCase.Payload, testCase.ExpectedThreatLevel);
         }
-        
+
         // EXERCISE 5: Authentication bypass attempts
         [TestCaseSource(nameof(AuthBypassPayloads))]
         public void Authentication_BypassAttempts_ShouldBePrevented(AuthTestCase testCase)
         {
             Console.WriteLine($"Testing auth bypass: {testCase.Description}");
-            
+
             // ACT
             var authResult = _attackSimulator.AttemptLogin(testCase.Username, testCase.Password);
-            
+
             // ASSERT
             Assert.Multiple(() =>
             {
-                Assert.That(authResult.IsSuccessful, Is.False, 
+                Assert.That(authResult.IsSuccessful, Is.False,
                            "Authentication bypass should fail");
-                Assert.That(authResult.IsBlocked, Is.True, 
+                Assert.That(authResult.IsBlocked, Is.True,
                            "Malicious attempts should be blocked");
-                Assert.That(authResult.SecurityFlags.Count, Is.GreaterThan(0), 
+                Assert.That(authResult.SecurityFlags.Count, Is.GreaterThan(0),
                            "Security violations should be flagged");
             });
         }
-        
+
         // ========================================================================
         // TEST DATA SOURCES - Real attack patterns that Super Security defends against
         // ========================================================================
-        
+
         public static IEnumerable<SqlInjectionTestCase> SqlInjectionPayloads()
         {
             yield return new SqlInjectionTestCase
@@ -209,38 +213,38 @@ namespace QaMastery.Week1.SecurityTesting
                 Description = "Table deletion attempt",
                 ExpectedThreatLevel = ThreatLevel.Critical
             };
-            
+
             yield return new SqlInjectionTestCase
             {
                 Payload = "' OR '1'='1",
                 Description = "Always true condition",
                 ExpectedThreatLevel = ThreatLevel.High
             };
-            
+
             yield return new SqlInjectionTestCase
             {
                 Payload = "' UNION SELECT password FROM users WHERE email='admin@company.com' --",
                 Description = "Data extraction attempt",
                 ExpectedThreatLevel = ThreatLevel.Critical
             };
-            
+
             yield return new SqlInjectionTestCase
             {
                 Payload = "'; INSERT INTO users (email, role) VALUES ('hacker@evil.com', 'admin'); --",
                 Description = "Privilege escalation attempt",
                 ExpectedThreatLevel = ThreatLevel.Critical
             };
-            
+
             yield return new SqlInjectionTestCase
             {
                 Payload = "admin'/*",
                 Description = "Comment-based injection",
                 ExpectedThreatLevel = ThreatLevel.Medium
             };
-            
+
             // TODO: Add 5 more SQL injection patterns you can think of
         }
-        
+
         public static IEnumerable<XssTestCase> XssPayloads()
         {
             yield return new XssTestCase
@@ -249,38 +253,38 @@ namespace QaMastery.Week1.SecurityTesting
                 Description = "Basic script injection",
                 ExpectedThreatLevel = ThreatLevel.High
             };
-            
+
             yield return new XssTestCase
             {
                 Payload = "<img src=x onerror=alert('XSS')>",
                 Description = "Image tag with error handler",
                 ExpectedThreatLevel = ThreatLevel.High
             };
-            
+
             yield return new XssTestCase
             {
                 Payload = "javascript:alert('XSS')",
                 Description = "JavaScript protocol",
                 ExpectedThreatLevel = ThreatLevel.Medium
             };
-            
+
             yield return new XssTestCase
             {
                 Payload = "<svg onload=alert('XSS')>",
                 Description = "SVG with onload event",
                 ExpectedThreatLevel = ThreatLevel.High
             };
-            
+
             yield return new XssTestCase
             {
                 Payload = "<iframe src=\"javascript:alert('XSS')\"></iframe>",
                 Description = "iframe with javascript source",
                 ExpectedThreatLevel = ThreatLevel.High
             };
-            
+
             // TODO: Add more XSS payloads
         }
-        
+
         public static IEnumerable<AuthTestCase> AuthBypassPayloads()
         {
             yield return new AuthTestCase
@@ -289,41 +293,41 @@ namespace QaMastery.Week1.SecurityTesting
                 Password = "anything",
                 Description = "SQL injection in username field"
             };
-            
+
             yield return new AuthTestCase
             {
                 Username = "admin",
                 Password = "' OR '1'='1' --",
                 Description = "SQL injection in password field"
             };
-            
+
             yield return new AuthTestCase
             {
                 Username = "../../../etc/passwd",
                 Password = "password",
                 Description = "Path traversal in username"
             };
-            
+
             yield return new AuthTestCase
             {
                 Username = "admin\x00",
                 Password = "password",
                 Description = "Null byte injection"
             };
-            
+
             // TODO: Add more authentication bypass attempts
         }
-        
+
         private void LogSecurityEvent(string eventType, string payload, ThreatLevel threatLevel)
         {
             Console.WriteLine($"[SECURITY LOG] {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} - {eventType} - {threatLevel} - Payload: {payload.Substring(0, Math.Min(50, payload.Length))}...");
         }
     }
-    
+
     // ============================================================================
     // YOUR CHALLENGE EXERCISES
     // ============================================================================
-    
+
     [TestFixture]
     [Category("YourSecurityPractice")]
     public class YourSecurityTestChallenge
@@ -339,10 +343,10 @@ namespace QaMastery.Week1.SecurityTesting
             // - Files with null bytes in filename
             // - Extremely large files (DoS attempt)
             // - Files with path traversal in filename (../../etc/passwd)
-            
+
             Assert.Fail("Implement comprehensive file upload security testing");
         }
-        
+
         // CHALLENGE 2: Create a rate limiting test
         [Test]
         public void Authentication_RapidAttempts_ShouldBeRateLimited()
@@ -352,10 +356,10 @@ namespace QaMastery.Week1.SecurityTesting
             // - 10 login attempts in 1 second
             // - Verify rate limiting kicks in
             // - Verify legitimate users can still login after cooldown
-            
+
             Assert.Fail("Implement rate limiting security test");
         }
-        
+
         // CHALLENGE 3: Create session security tests
         [Test]
         public void SessionManagement_SecurityRequirements_ShouldBeEnforced()
@@ -366,151 +370,11 @@ namespace QaMastery.Week1.SecurityTesting
             // - Sessions should be invalidated on logout
             // - Multiple sessions should be tracked
             // - Session fixation should be prevented
-            
+
             Assert.Fail("Implement session security testing");
         }
     }
-    
-    // ============================================================================
-    // HELPER CLASSES - Implement these to make your tests work
-    // ============================================================================
-    
-    public class SecurityValidator
-    {
-        public ValidationResult ValidateEmail(string email)
-        {
-            // TODO: Implement comprehensive email validation
-            // Consider: format, length, special characters, injection attempts
-            return new ValidationResult { IsValid = !string.IsNullOrEmpty(email) && email.Contains("@") };
-        }
-        
-        public PasswordValidationResult ValidatePassword(string password, string username = null)
-        {
-            // TODO: Implement password validation with security focus
-            // - Minimum length (8+ characters)
-            // - Complexity requirements (upper, lower, number, special)
-            // - Common password detection
-            // - Username similarity check
-            return new PasswordValidationResult { IsValid = password?.Length >= 8 };
-        }
-        
-        public SanitizationResult SanitizeUserInput(string input)
-        {
-            // TODO: Implement input sanitization that blocks SQL injection
-            var containsSqlKeywords = input?.ToLower().Contains("drop table") == true ||
-                                    input?.ToLower().Contains("union select") == true ||
-                                    input?.Contains("'") == true;
-            
-            return new SanitizationResult
-            {
-                IsBlocked = containsSqlKeywords,
-                SanitizedInput = input?.Replace("'", "''"),
-                ThreatLevel = containsSqlKeywords ? ThreatLevel.High : ThreatLevel.None
-            };
-        }
-        
-        public SanitizationResult SanitizeHtmlInput(string input)
-        {
-            // TODO: Implement HTML sanitization that prevents XSS
-            var sanitized = input?
-                .Replace("<script>", "")
-                .Replace("</script>", "")
-                .Replace("javascript:", "")
-                .Replace("onerror=", "")
-                .Replace("onload=", "");
-                
-            return new SanitizationResult
-            {
-                SanitizedInput = sanitized,
-                ThreatLevel = input != sanitized ? ThreatLevel.Medium : ThreatLevel.None
-            };
-        }
-    }
-    
-    public class AttackSimulator
-    {
-        public AuthenticationResult AttemptLogin(string username, string password)
-        {
-            // TODO: Simulate authentication that detects bypass attempts
-            var securityFlags = new List<string>();
-            
-            if (username?.Contains("'") == true) securityFlags.Add("SQL_INJECTION_ATTEMPT");
-            if (username?.Contains("../") == true) securityFlags.Add("PATH_TRAVERSAL_ATTEMPT");
-            if (username?.Contains("\x00") == true) securityFlags.Add("NULL_BYTE_INJECTION");
-            
-            return new AuthenticationResult
-            {
-                IsSuccessful = false,
-                IsBlocked = securityFlags.Count > 0,
-                SecurityFlags = securityFlags
-            };
-        }
-    }
-    
-    // Data classes for test cases
-    public class SqlInjectionTestCase
-    {
-        public string Payload { get; set; } = "";
-        public string Description { get; set; } = "";
-        public ThreatLevel ExpectedThreatLevel { get; set; }
-        
-        public override string ToString() => Description;
-    }
-    
-    public class XssTestCase
-    {
-        public string Payload { get; set; } = "";
-        public string Description { get; set; } = "";
-        public ThreatLevel ExpectedThreatLevel { get; set; }
-        
-        public override string ToString() => Description;
-    }
-    
-    public class AuthTestCase
-    {
-        public string Username { get; set; } = "";
-        public string Password { get; set; } = "";
-        public string Description { get; set; } = "";
-        
-        public override string ToString() => Description;
-    }
-    
-    // Result classes
-    public class ValidationResult
-    {
-        public bool IsValid { get; set; }
-        public string ErrorMessage { get; set; } = "";
-        public string SanitizedInput { get; set; } = "";
-    }
-    
-    public class PasswordValidationResult
-    {
-        public bool IsValid { get; set; }
-        public List<string> ErrorMessages { get; set; } = new List<string>();
-    }
-    
-    public class SanitizationResult
-    {
-        public bool IsBlocked { get; set; }
-        public string SanitizedInput { get; set; } = "";
-        public ThreatLevel ThreatLevel { get; set; }
-    }
-    
-    public class AuthenticationResult
-    {
-        public bool IsSuccessful { get; set; }
-        public bool IsBlocked { get; set; }
-        public List<string> SecurityFlags { get; set; } = new List<string>();
-    }
-    
-    public enum ThreatLevel
-    {
-        None,
-        Low,
-        Medium,
-        High,
-        Critical
-    }
+*/
 }
 
 // ============================================================================

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using QaMastery.Models;
+using QaMastery.Models.Results;
 
-namespace QaMastery.Week1.Day1
+namespace QaMastery.Services.Core
 {
     public class UserService
     {

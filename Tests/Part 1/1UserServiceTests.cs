@@ -1,5 +1,10 @@
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+using QaMastery.Models;
+using QaMastery.Services.Core;
+using QaMastery.Services.Security;
+using QaMastery.Models.Results;
+using QaMastery.Models.Enums;
 using System;
 using System.Collections.Generic;
 
