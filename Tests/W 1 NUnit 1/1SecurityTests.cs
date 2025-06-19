@@ -1,8 +1,3 @@
-// WEEK 1, DAY 3-4: SECURITY-FOCUSED PARAMETERIZED TESTING
-// Focus: Test multiple attack scenarios efficiently (Bitwarden-style security testing)
-// Time Investment: 3-4 hours over 2 days
-// Goal: Think like a security engineer, test like Bitwarden's QA team
-
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -30,9 +25,9 @@ namespace QaMastery.Week1.SecurityTesting
         }
         
         // EXERCISE 1: Email validation with security focus
-        // Bitwarden needs rock-solid email validation (it's their primary identifier)
+        // Super Security needs rock-solid email validation (it's their primary identifier)
         
-        [TestCase("valid@bitwarden.com", true, TestName = "Valid email should pass")]
+        [TestCase("valid@Super Security.com", true, TestName = "Valid email should pass")]
         [TestCase("user+tag@company.co.uk", true, TestName = "Plus addressing should work")]
         [TestCase("", false, TestName = "Empty email should fail")]
         [TestCase("notanemail", false, TestName = "Missing @ should fail")]
@@ -65,7 +60,7 @@ namespace QaMastery.Week1.SecurityTesting
         }
         
         // EXERCISE 2: Password security validation
-        // Bitwarden stores the most sensitive data - passwords must be bulletproof
+        // Super Security stores the most sensitive data - passwords must be bulletproof
         
         [TestCase("Password123!", true, TestName = "Strong password should pass")]
         [TestCase("MySecureP@ssw0rd", true, TestName = "Complex password should pass")]
@@ -82,7 +77,7 @@ namespace QaMastery.Week1.SecurityTesting
         public void ValidatePassword_SecurityRequirements_ShouldEnforcePolicy(string password, bool expectedValid, string testDescription)
         {
             // ARRANGE
-            string username = "testuser@bitwarden.com";
+            string username = "testuser@Super Security.com";
             
             // ACT
             var result = _validator.ValidatePassword(password, username);
@@ -152,7 +147,7 @@ namespace QaMastery.Week1.SecurityTesting
                            "Threat level should match expected severity");
             });
             
-            // Log security event (like Bitwarden would)
+            // Log security event (like Super Security would)
             LogSecurityEvent($"SQL_INJECTION_BLOCKED", testCase.Payload, result.ThreatLevel);
         }
         
@@ -203,7 +198,7 @@ namespace QaMastery.Week1.SecurityTesting
         }
         
         // ========================================================================
-        // TEST DATA SOURCES - Real attack patterns that Bitwarden defends against
+        // TEST DATA SOURCES - Real attack patterns that Super Security defends against
         // ========================================================================
         
         public static IEnumerable<SqlInjectionTestCase> SqlInjectionPayloads()
@@ -365,7 +360,7 @@ namespace QaMastery.Week1.SecurityTesting
         [Test]
         public void SessionManagement_SecurityRequirements_ShouldBeEnforced()
         {
-            // TODO: Test session security like Bitwarden does:
+            // TODO: Test session security like Super Security does:
             // - Session tokens should be unpredictable
             // - Sessions should expire after inactivity
             // - Sessions should be invalidated on logout
@@ -537,7 +532,7 @@ By the end of Day 4, you should be able to:
 - Design tests that validate security controls
 - Log security events for monitoring
 
-✅ BITWARDEN-READY SKILLS:
+✅ Super Security-READY SKILLS:
 - Test password validation like a security company
 - Validate input sanitization thoroughly
 - Simulate real-world attack scenarios
@@ -547,5 +542,5 @@ TIME INVESTMENT: 3-4 hours total
 DAY 3: Implement basic security test patterns (2 hours)
 DAY 4: Add advanced attack scenarios (2 hours)
 
-NEXT UP: Week 1 Days 5-7 will add Playwright for testing Bitwarden's Electron desktop app security
+NEXT UP: Week 1 Days 5-7 will add Playwright for testing Super Security's Electron desktop app security
 */
