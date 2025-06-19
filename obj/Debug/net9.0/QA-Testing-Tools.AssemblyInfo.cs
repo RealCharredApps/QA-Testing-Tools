@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QA-Testing-Tools")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8404bd65239a7eb029f2056e103a728bef36b321")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e4de1e43ed0885e372aa147255381f3fd2591404")]
 [assembly: System.Reflection.AssemblyProductAttribute("QA-Testing-Tools")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QA-Testing-Tools")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

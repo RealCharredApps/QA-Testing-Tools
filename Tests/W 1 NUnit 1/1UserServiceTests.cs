@@ -97,7 +97,7 @@ namespace QaMastery.Week1.Day1
 
         // CHALLENGE 2: Create a test that would fail if run after another test
         // Then fix it with proper setup/teardown
-        /*
+
         [Test]
         public void TestThatDependsOnCleanState()
         {
@@ -105,6 +105,6 @@ namespace QaMastery.Week1.Day1
             // Make it fail, then fix with proper setup
             Assert.Fail("Implement this challenge");
         }
-        */
+
     }
 }

@@ -1573,11 +1573,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/bbm2/Documents/GitHub/QA-Testing-Tools/QA-Testing-Tools.csproj",
+      "projectUniqueName": "/Users/bbm2/Documents/GitHub/RealCharredApps/QA-Testing-Tools/QA-Testing-Tools.csproj",
       "projectName": "QA-Testing-Tools",
-      "projectPath": "/Users/bbm2/Documents/GitHub/QA-Testing-Tools/QA-Testing-Tools.csproj",
+      "projectPath": "/Users/bbm2/Documents/GitHub/RealCharredApps/QA-Testing-Tools/QA-Testing-Tools.csproj",
       "packagesPath": "/Users/bbm2/.nuget/packages/",
-      "outputPath": "/Users/bbm2/Documents/GitHub/QA-Testing-Tools/obj/",
+      "outputPath": "/Users/bbm2/Documents/GitHub/RealCharredApps/QA-Testing-Tools/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/bbm2/.nuget/NuGet/NuGet.Config"
