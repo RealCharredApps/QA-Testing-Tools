@@ -1,0 +1,204 @@
+// WEEK 1, DAY 1-2: ADVANCED NUNIT TEST ORGANIZATION
+// Focus: Build enterprise-grade test structure (not just syntax)
+// Time Investment: 2-3 hours total over 2 days
+// Goal: Understand WHY we organize tests this way
+
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+
+namespace QaMastery.Week1.Day1
+{
+    // ============================================================================
+    // DAY 1 FOCUS: Setup/TearDown Patterns That Actually Matter
+    // ============================================================================
+
+    // STEP 1: Build this simple test class first
+    // Understand EACH piece before moving to complex scenarios
+
+    [TestFixture]
+    [Category("UserManagement")]  // Why categorize? Think about test runs in CI/CD
+    public class UserServiceTests
+    {
+        private UserService _userService;
+        private TestDatabase _testDb;
+        private List<string> _createdUserIds;
+
+        // EXERCISE 1: Understand the setup hierarchy
+        // Q: When does each method run? Why does order matter?
+
+        [OneTimeSetUp]
+        public void FixtureSetup()
+        {
+            // Initialize expensive resources ONCE for all tests
+            Console.WriteLine("🔧 Setting up test database connection...");
+            _testDb = new TestDatabase();
+            _testDb.Connect();
+
+            // THINK: What belongs here vs Setup()?
+            // Hint: Database connections, test servers, one-time data
+        }
+
+        [SetUp]
+        public void TestSetup()
+        {
+            // Fresh state for EACH test
+            Console.WriteLine($"🧪 Starting: {TestContext.CurrentContext.Test.Name}");
+            _userService = new UserService(_testDb);
+            _createdUserIds = new List<string>();
+
+            // THINK: Why create new service instance each time?
+            // Hint: Test isolation, no shared state between tests
+        }
+
+        [TearDown]
+        public void TestCleanup()
+        {
+            // Clean up data created during THIS test
+            Console.WriteLine($"🧹 Cleaning up: {TestContext.CurrentContext.Test.Name}");
+
+            foreach (var userId in _createdUserIds)
+            {
+                _userService.DeleteUser(userId);
+            }
+
+            Console.WriteLine($"✅ Completed: {TestContext.CurrentContext.Test.Name}");
+
+            // THINK: Why clean up after each test?
+            // Hint: Test independence, predictable starting state
+            // Don't introduce bad data into production... 
+        }
+
+        [OneTimeTearDown]
+        public void FixtureCleanup()
+        {
+            // Close expensive resources
+            Console.WriteLine("🔒 Closing database connection...");
+            _testDb?.Disconnect();
+
+            // THINK: What cleanup belongs here?
+            // Hint: Connections, files, external resources
+            // the stuff initialized at first... got it, like playwright in closing the browser after each test.
+        }
+
+        // ========================================================================
+        // EXERCISE 2: Your first real test with proper cleanup tracking
+        // ========================================================================
+
+        [Test]
+        [Description("Basic user creation - validates service works correctly")]
+        public void CreateUser_WithValidData_ShouldSucceed()
+        {
+            // ARRANGE: Set up test data
+            var testUser = new User
+            {
+                Email = "test@example.com",
+                Name = "Test User",
+                Password = "SecurePass123!"
+            };
+
+            // ACT: Execute the operation being tested
+            var result = _userService.CreateUser(testUser);
+
+            // ASSERT: Verify expected outcome
+            Assert.That(result.IsSuccess, Is.True, "User creation should succeed");
+            Assert.That(result.UserId, Is.Not.Null, "Should return user ID");
+
+            // CRITICAL: Track created data for cleanup
+            _createdUserIds.Add(result.UserId);
+
+            // BONUS VALIDATION: Verify user actually exists
+            var createdUser = _userService.GetUser(result.UserId);
+            Assert.That(createdUser.Email, Is.EqualTo(testUser.Email));
+        }
+
+        // ========================================================================
+        // EXERCISE 3: Test that demonstrates why isolation matters
+        // ========================================================================
+
+        [Test]
+        [Description("Demonstrates test isolation - this test should not affect others")]
+        public void CreateUser_DuplicateEmail_ShouldFail()
+        {
+            // ARRANGE: Create a user first
+            var firstUser = new User
+            {
+                Email = "duplicate@example.com",
+                Name = "First User",
+                Password = "Password123!"
+            };
+
+            var firstResult = _userService.CreateUser(firstUser);
+            _createdUserIds.Add(firstResult.UserId);
+
+            // Create second user with same email
+            var duplicateUser = new User
+            {
+                Email = "duplicate@example.com",  // Same email!
+                Name = "Duplicate User",
+                Password = "Different123!"
+            };
+
+            // ACT & ASSERT: Second creation should fail
+            var duplicateResult = _userService.CreateUser(duplicateUser);
+            Assert.That(duplicateResult.IsSuccess, Is.False, "Duplicate email should be rejected");
+            Assert.That(duplicateResult.ErrorMessage, Does.Contain("email already exists"));
+
+            // THINK: What happens if cleanup fails?
+            // What if previous test left data behind?
+        }
+    }
+
+    // ============================================================================
+    // DAY 2 FOCUS: Categories and Test Organization
+    // ============================================================================
+
+    // EXERCISE 4: Understand how categories enable smart test execution
+
+    [TestFixture]
+    [Category("Security")]  // This enables: dotnet test --filter Category=Security
+    public class SecurityTests
+    {
+        [Test]
+        [Category("QuickSecurity")]  // Combine categories for flexible filtering
+        public void PasswordValidation_WeakPassword_ShouldBeRejected()
+        {
+            var validator = new PasswordValidator();
+
+            var weakPasswords = new[] { "password", "123456", "admin" };
+
+            foreach (var weakPassword in weakPasswords)
+            {
+                var result = validator.ValidatePassword(weakPassword);
+                Assert.That(result.IsValid, Is.False,
+                           $"Password '{weakPassword}' should be rejected");
+            }
+        }
+
+        [Test]
+        [Category("SlowSecurity")]  // Mark tests that take longer
+        public void BruteForceAttack_ShouldBeLimited()
+        {
+            var authService = new AuthService();
+
+            // This test might take 30+ seconds due to rate limiting
+            for (int attempt = 1; attempt <= 10; attempt++)
+            {
+                var result = authService.Login("test@example.com", "wrongpassword");
+                Console.WriteLine($"Attempt {attempt}: {result.IsSuccess}");
+
+                if (attempt >= 5)
+                {
+                    Assert.That(result.IsBlocked, Is.True,
+                               "Should be rate limited after 5 attempts");
+                }
+            }
+        }
+    }
+
+    // ============================================================================
+    // HANDS-ON EXERCISES FOR YOU
+    // ============================================================================
+
+
+}
