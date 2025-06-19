@@ -33,15 +33,15 @@ namespace QaMastery.Week1.SecurityTesting
 
         [TestCase("valid@Super Security.com", true, TestName = "Valid email should pass")]
         [TestCase("user+tag@company.co.uk", true, TestName = "Plus addressing should work")]
-        [TestCase("", false, TestName = "Empty email should fail")] //FAILED THROUGH
-        [TestCase("notanemail", false, TestName = "Missing @ should fail")] //FAILED THROUGH
-        [TestCase("test@", false, TestName = "Missing domain should fail")] //FAILED THROUGH
-        [TestCase("@domain.com", false, TestName = "Missing username should fail")] //FAILED THROUGH
+        [TestCase("", false, TestName = "Empty email should fail")] //✅FIXED: FAILED THROUGH
+        [TestCase("notanemail", false, TestName = "Missing @ should fail")] //✅FIXED business logic: FAILED THROUGH
+        [TestCase("test@", false, TestName = "Missing domain should fail")] //✅FIXED business logic: FAILED THROUGH
+        [TestCase("@domain.com", false, TestName = "Missing username should fail")] //✅FIXED business logic: FAILED THROUGH
         // SECURITY-FOCUSED test cases (what attackers try):
-        [TestCase("test'; DROP TABLE users; --@evil.com", false, TestName = "SQL injection in email should fail")] //FAILED THROUGH
-        [TestCase("test<script>alert('xss')</script>@domain.com", false, TestName = "XSS in email should fail")] //FAILED THROUGH
-        [TestCase("test@domain.com\r\nBCC: attacker@evil.com", false, TestName = "Email header injection should fail")] //FAILED THROUGH
-        [TestCase("../../../etc/passwd@domain.com", false, TestName = "Path traversal attempt should fail")] //FAILED THROUGH
+        [TestCase("test'; DROP TABLE users; --@evil.com", false, TestName = "SQL injection in email should fail")] //✅FIXED: FAILED THROUGH
+        [TestCase("test<script>alert('xss')</script>@domain.com", false, TestName = "XSS in email should fail")] //✅FIXED in sql/san...: FAILED THROUGH
+        [TestCase("test@domain.com\r\nBCC: attacker@evil.com", false, TestName = "Email header injection should fail")] //✅FIXED: FAILED THROUGH
+        [TestCase("../../../etc/passwd@domain.com", false, TestName = "Path traversal attempt should fail")] //✅FIXED: FAILED THROUGH
         public void ValidateEmail_SecurityScenarios_ShouldPreventAttacks(string email, bool expectedValid)
         {
             // ACT
@@ -62,6 +62,12 @@ namespace QaMastery.Week1.SecurityTesting
                            "Sanitized input should not contain script tags");
             }
         }
+
+
+
+
+
+        
         /*
         // EXERCISE 2: Password security validation
         // Super Security stores the most sensitive data - passwords must be bulletproof
