@@ -7,7 +7,7 @@ namespace QaMastery.Services.Security
     {
         public AuthenticationResult AttemptLogin(string username, string password)
         {
-            // TODO: Simulate authentication that detects bypass attempts
+            // Simulate authentication that detects bypass attempts
             var securityFlags = new List<string>();
 
             if (username?.Contains("'") == true) securityFlags.Add("SQL_INJECTION_ATTEMPT");
